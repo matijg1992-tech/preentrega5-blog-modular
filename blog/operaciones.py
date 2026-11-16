@@ -1,12 +1,13 @@
 # ==============================================================================
-# Módulo de operaciones sobre los posts (listado, búsqueda, filtrado)
+# Módulo de operaciones y formateo de salida por consola
 # Archivo: blog/operaciones.py
 # ==============================================================================
 
-def listar_posts(lista):
+from blog.modelos import Autor, Post
+
+def mostrar_posts_en_consola(lista):
     """
-    Muestra en consola las publicaciones recibidas con su título, autor y estado.
-    Utiliza .get() para acceder de forma segura a datos anidados sin generar KeyError.
+    Imprime en consola una lista de objetos Post con formato claro.
     """
     print("\n--- LISTADO DE PUBLICACIONES ---")
     if not lista:
@@ -14,52 +15,23 @@ def listar_posts(lista):
         return
 
     for post in lista:
-        titulo = post.get("titulo", "Sin título")
-        autor = post.get("autor")
-        nombre_autor = autor.get("nombre", "Autor desconocido") if isinstance(autor, dict) else "Autor no especificado"
-        estado = post.get("estado", "Desconocido")
-        print(f"- ID {post.get('id', '?')}: '{titulo}' | Autor: {nombre_autor} | Estado: {estado}")
+        if isinstance(post, Post):
+            nombre_autor = post.autor.nombre if isinstance(post.autor, Autor) else str(post.autor)
+            print(f"- ID {post.id}: '{post.titulo}' | Autor: {nombre_autor} | Estado: {post.estado}")
+        elif isinstance(post, dict):
+            autor_info = post.get("autor", {})
+            nombre = autor_info.get("nombre", "Desconocido") if isinstance(autor_info, dict) else str(autor_info)
+            print(f"- ID {post.get('id', '?')}: '{post.get('titulo')}' | Autor: {nombre} | Estado: {post.get('estado')}")
 
 
-def buscar_por_titulo(lista, termino):
+def mostrar_detalle_post(post):
     """
-    Busca publicaciones cuyo título contenga el término especificado.
-    La comparación es insensible a mayúsculas y minúsculas gracias a .lower().
-    Retorna una lista con los posts que coinciden.
+    Muestra todos los campos detallados de una publicación.
     """
-    if not termino:
-        print("El término de búsqueda no puede estar vacío.")
-        return []
-
-    termino_lower = termino.strip().lower()
-    coincidencias = []
-
-    for post in lista:
-        titulo = post.get("titulo", "")
-        if isinstance(titulo, str) and termino_lower in titulo.lower():
-            coincidencias.append(post)
-
-    return coincidencias
-
-
-def filtrar_por_tag(lista, tag):
-    """
-    Filtra publicaciones que incluyan una etiqueta determinada en su lista de tags.
-    La comparación es insensible a mayúsculas y minúsculas usando .lower().
-    Retorna una lista con los posts que contienen la etiqueta.
-    """
-    if not tag:
-        print("La etiqueta a filtrar no puede estar vacía.")
-        return []
-
-    tag_lower = tag.strip().lower()
-    coincidencias = []
-
-    for post in lista:
-        tags = post.get("tags", [])
-        if isinstance(tags, list):
-            tags_lower = [str(t).lower() for t in tags]
-            if tag_lower in tags_lower:
-                coincidencias.append(post)
-
-    return coincidencias
+    if isinstance(post, Post):
+        nombre_autor = post.autor.nombre if isinstance(post.autor, Autor) else str(post.autor)
+        print(f"\n[ID {post.id}] {post.titulo}")
+        print(f"Autor: {nombre_autor}")
+        print(f"Estado: {post.estado}")
+        print(f"Tags: {', '.join(post.tags) if post.tags else 'Sin tags'}")
+        print(f"Contenido: {post.contenido}")
